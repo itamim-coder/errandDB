@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 const cors = require('cors');
 var ObjectId = require("mongodb").ObjectId;
@@ -7,7 +7,7 @@ var ObjectId = require("mongodb").ObjectId;
 
 const app = express();
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 
 
 // middleware
@@ -17,28 +17,28 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.srriw.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 console.log(uri)
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
 async function run(){
     try{
         await client.connect();
-        const database = client.db('testerrand'); 
-        const tasksCollection = database.collection("tasks");  
+        const database = client.db('buddy'); 
+        const jobsCollection = database.collection('jobs');  
     
         //post tasks
+        app.post('/jobs', async (req, res) => {
+            const jobs = req.body;
+            const result = await jobsCollection.insertOne(jobs);
+            console.log(result);
+            res.json(result);
+        });
 
-        app.post("/tasks", async(req,res) =>{
-            const result = await tasksCollection.insertOne(req.body);
-            res.send(result)
-            console.log(result)
-        }) 
-
-        app.get('/tasks', async (req, res) => {
-            const cursor = tasksCollection.find({});
-            const tasks = await cursor.toArray();
-            res.send(tasks);
-        } )  
+        app.get('/jobs', async (req, res) => {
+            const cursor = jobsCollection.find({});
+            const jobs = await cursor.toArray();
+            res.send(jobs);
+        } )  ;
 
 
         console.log('connected errandDB')
